@@ -21,80 +21,105 @@
 }
 
 body {
-    background-color: #FFFFFF;
+    background-color: #111111;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 .header-bar {
-    width: 100%;
-    height: 60px; /* Adjust the height as needed */
-    background-color: #000000; /* Dark background for the header */
-    color: white;
     display: flex;
     align-items: center;
-    padding-left: 20px; /* Padding for content inside header */
+    justify-content: space-between;
+    padding: 10px 20px;
+    background-color: #76b900;
+    height: 60px;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    box-sizing: border-box;
 }
 
 .header-logo {
-    height: 32px; /* Adjust based on your logo's aspect ratio */
-    margin-right: 10px;
+    height: 40px;
 }
 
 .header-title {
+    color: #000000;
     font-size: 20px;
-    font-weight: bold;
+    font-weight: 500;
+    margin-right: auto;
+    margin-left: 15px;
 }
 
 .loading-indicator-label {
-    margin-top: 50px;
-    padding-bottom: 25px;
-    padding-left: 50px;
-    padding-right: 50px;
-    padding-top: 25px;
-    width: 100%;
-    background-color: rgba(255, 255, 255);
-    color: #76b900; /* NVIDIA green */
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
     align-items: center;
-    font-weight: bold;
+    justify-content: center;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #111111;
+    color: #ffffff;
+    text-align: center;
+    font-size: 18px;
+    z-index: 99;
+}
+
+.spinner-border {
+    color: #76b900;
+    margin-top: 15px;
+    width: 3rem;
+    height: 3rem;
 }
 
 .nvidia-button {
-    font-size: 14px;
-    margin-top: 6px; /* Space above the button */
-    padding: 4px 8px; /* Padding inside the button */
-    background-color: #76b900; /* NVIDIA green */
-    color: white; /* Text color */
-    border: solid;
-    border-color: #76b900;
-    border-width: 2px;
-    cursor: pointer; /* Pointer cursor on hover */
+    background-color: #76b900;
+    color: #000000;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-right: 10px;
 }
 
 .nvidia-button:hover {
-    background-color: #ffffff; /* Darker green on hover */
-    color: black;
-    border-color: #76b900;
+    background-color: #8fd400;
+}
+
+.nvidia-button:disabled {
+    background-color: #4a7200;
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 .nvidia-dropdown {
     width: 100%;
-    background-color: #76b900; /* NVIDIA green */
-    color: #ffffff; /* White text */
-    font-size: 16px; /* Adjust font size as needed */
-    border: none;
-    height: 35px;
-    border-radius: 6px;
+    padding: 10px;
+    background-color: #2a2a2a;
+    border: 1px solid #333333;
+    color: #ffffff;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
 }
 
 .nvidia-dropdown:focus {
-    outline: none;
+    border-color: #76b900;
 }
 
 .nvidia-dropdown-option {
-    background-color: #FEFEFE; /* Light background for options */
-    color: #000000; /* Dark text for options */
+    background-color: #2a2a2a;
+    color: #ffffff;
 }
 
 .form-check-input:checked {
@@ -111,4 +136,67 @@ body {
     outline: none;
     box-shadow: 0 0 0 0.25rem rgba(118, 185, 0, 0.5); /* Custom green focus */
     border-color: #76b900;
+}
+
+.logout-button {
+    background-color: rgba(0, 0, 0, 0.2) !important;
+    color: #000000 !important;
+    border: none !important;
+    padding: 8px 20px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s !important;
+    margin: 0 !important;
+    width: auto !important;
+}
+
+.logout-button:hover {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Main content area styles */
+.main-content {
+    background-color: #111111;
+    min-height: calc(100vh - 60px);
+    margin-top: 60px;
+    padding: 20px;
+    color: #ffffff;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* Form container styles */
+.form-container {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    padding: 30px;
+    max-width: 800px;
+    margin: 0 auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Add responsive container */
+.container-fluid {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Update form row styles */
+.row {
+    margin: 0;
+    width: 100%;
+}
+
+/* Update form input styles */
+.form-control {
+    width: 100%;
+    box-sizing: border-box;
 }

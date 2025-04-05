@@ -22,7 +22,7 @@ import "./App.css";
 import Window from './Window';
 import StreamOnlyWindow from './StreamOnlyWindow';
 import { Application, AppOnlyForm, ServerURLsForm, ApplicationsForm, VersionsForm, ProfilesForm } from "./Forms"
-import LogoImage from './assets/nvidia_logo.png';
+import LogoImage from './assets/nAurava_logo.png';
 import StreamConfig from '../stream.config.json';
 import {
     getStreamingSessionInfo,
@@ -30,6 +30,8 @@ import {
     destroyStreamingSession,
     StreamItem
 } from './Endpoints';
+import Auth from './Auth';
+import { onAuthChange, logoutUser } from './firebase';
 
 export const headerHeight: number = 60;
 
@@ -51,6 +53,7 @@ export enum Forms {
 }
 
 interface AppState {
+    isAuthenticated: boolean;
     currentForm: Forms,
     useWebUI: boolean 
     streamServer: string,
@@ -73,9 +76,12 @@ interface AppState {
 }
 
 class App extends Component<{}, AppState>{
+    private unsubscribeAuth: (() => void) | null = null;
+
     constructor(props: {}) {
         super(props);
         this.state = {
+            isAuthenticated: false,
             currentForm: Forms.AppOnly,
             useWebUI: true,
             streamServer: StreamConfig.stream.streamServer,
@@ -98,6 +104,38 @@ class App extends Component<{}, AppState>{
         };
 
         this._resetStream = this._resetStream.bind(this);
+        this._handleAuthSuccess = this._handleAuthSuccess.bind(this);
+        this._handleLogout = this._handleLogout.bind(this);
+    }
+
+    componentDidMount() {
+        // Set up Firebase auth state listener
+        this.unsubscribeAuth = onAuthChange((user) => {
+            this.setState({ isAuthenticated: !!user });
+        });
+    }
+
+    componentWillUnmount() {
+        // Clean up auth listener on component unmount
+        if (this.unsubscribeAuth) {
+            this.unsubscribeAuth();
+        }
+    }
+
+    /**
+     * Handle successful authentication
+    */
+    private _handleAuthSuccess() {
+        this.setState({ isAuthenticated: true });
+    }
+
+    /**
+     * Handle user logout
+    */
+    private async _handleLogout() {
+        await logoutUser();
+        this._resetState();
+        this.setState({ isAuthenticated: false });
     }
 
     /**
@@ -247,6 +285,9 @@ class App extends Component<{}, AppState>{
     }
             
     render() {
+        if (!this.state.isAuthenticated) {
+            return <Auth onAuthSuccess={this._handleAuthSuccess} />;
+        }
 
         return (
             <div
@@ -263,7 +304,15 @@ class App extends Component<{}, AppState>{
             <div className="header-bar">
                 <img src={LogoImage} alt="Logo" className="header-logo" />
                     <span className="header-title">Omniverse Embedded Web Viewer Example</span>
-                </div>
+                
+                {/* Logout button */}
+                <button 
+                    className="nvidia-button logout-button"
+                    onClick={this._handleLogout}
+                >
+                    Logout
+                </button>
+            </div>
 
             { /* End Stream button */}
             {StreamConfig.source === "stream" &&

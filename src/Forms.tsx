@@ -19,8 +19,21 @@ const nextButtonStyle = {
 };
 
 const formContainerStyle = {
-    margin: '20px 20px',
-}
+    margin: '20px auto',
+    maxWidth: '800px',
+    backgroundColor: '#1e1e1e',
+    borderRadius: '8px',
+    padding: '30px',
+    color: '#ffffff',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+};
+
+const buttonContainerStyle = {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: '20px',
+    gap: '10px'
+};
 
 export interface Application {
     id: string
@@ -104,34 +117,71 @@ export class AppOnlyForm extends Component <AppOnlyProps, AppOnlyState>{
 
     render () {
         return (
-            
-            <div style={formContainerStyle}>
-            <h3>UI Option</h3>
-                <label>This client is part of the <a
-                    href="https://docs.omniverse.nvidia.com/embedded-web-viewer/latest/index.html" target="_blank"
-                    rel="noopener noreferrer">Embedded Web Viewer Guide</a>.
-                    It provides a user interface and functionality that supports Kit applications created from
-                    the <b>USD Viewer</b> Template in the <a href="https://github.com/NVIDIA-Omniverse/kit-app-template"
-                                              target="_blank" rel="noopener noreferrer">kit-app-template</a>.
-                    <br/>
-                    If you are using this client to stream any other application you need to select the 2nd option below in order for the streamed application to become visible.
-                </label>
-                <br/>
-            <br/>
-            <div className="form-check">
-                <input className="form-check-input" type="radio" name="webUiRadio" checked={this.state.useWebUI} id="yes" onChange={() => this._handleOptionChange(true)}/>
-                <label className="form-check-label" htmlFor="radios1">
-                    UI for default streaming <b>USD Viewer</b> app
-                </label>
+            <div className="main-content">
+                <div style={formContainerStyle}>
+                    <h3 style={{ color: '#76b900', marginBottom: '20px' }}>UI Option</h3>
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ marginBottom: '15px', display: 'block' }}>
+                            This client is part of the <a
+                                href="https://docs.omniverse.nvidia.com/embedded-web-viewer/latest/index.html"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ color: '#76b900' }}>
+                                Embedded Web Viewer Guide
+                            </a>.
+                            It provides a user interface and functionality that supports Kit applications created from
+                            the <b>USD Viewer</b> Template in the <a
+                                href="https://github.com/NVIDIA-Omniverse/kit-app-template"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ color: '#76b900' }}>
+                                kit-app-template
+                            </a>.
+                        </label>
+                        <p style={{ marginBottom: '20px', opacity: '0.8' }}>
+                            If you are using this client to stream any other application you need to select the 2nd option below in order for the streamed application to become visible.
+                        </p>
+                    </div>
+
+                    <div className="form-check" style={{ marginBottom: '15px' }}>
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            name="webUiRadio"
+                            checked={this.state.useWebUI}
+                            id="yes"
+                            onChange={() => this._handleOptionChange(true)}
+                            style={{ marginRight: '10px' }}
+                        />
+                        <label className="form-check-label" htmlFor="yes">
+                            UI for default streaming <b>USD Viewer</b> app
+                        </label>
+                    </div>
+                    <div className="form-check" style={{ marginBottom: '20px' }}>
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            name="webUiRadio"
+                            id="no"
+                            checked={!this.state.useWebUI}
+                            onChange={() => this._handleOptionChange(false)}
+                            style={{ marginRight: '10px' }}
+                        />
+                        <label className="form-check-label" htmlFor="no">
+                            UI for <b>any</b> streaming app
+                        </label>
+                    </div>
+                    <div style={buttonContainerStyle}>
+                        <button
+                            type="button"
+                            className="nvidia-button"
+                            onClick={() => this.props.onNext(this.state)}
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div className="form-check">
-                <input className="form-check-input" type="radio" name="webUiRadio" id="no" checked={!this.state.useWebUI} onChange={() => this._handleOptionChange(false)}/>
-                <label className="form-check-label" htmlFor="radios1">
-                    UI for <b>any</b> streaming app
-                </label>
-            </div>
-            <button type="button" className="nvidia-button" onClick={() => this.props.onNext(this.state)} style={nextButtonStyle}>Next</button>
-        </div>
         )
     }
 }
@@ -168,123 +218,162 @@ export class ServerURLsForm extends Component <ServerURLsProps, ServerURLsState>
     async _validateEndpoint(endpoint: string): Promise<boolean> {
         try {
             const response = await fetch(endpoint, {
-            method: 'GET',
-            mode: 'cors',
-            headers: {'Content-Type': 'application/json'},
+                method: 'GET',
+                mode: 'cors',
+                headers: {'Content-Type': 'application/json'},
             });
     
             if (!response.ok) {
-                alert(`Error: Received status code ${response.status}`);
-                return false
+                console.error(`Error: Received status code ${response.status} from ${endpoint}`);
+                alert(`Error: Unable to connect to ${endpoint.split('/').slice(0, 3).join('/')}`);
+                return false;
             }
+            return true;
+        } catch (error) {
+            console.error(`Error connecting to ${endpoint}:`, error);
+            alert(`Error: Unable to connect to ${endpoint.split('/').slice(0, 3).join('/')}`);
+            return false;
         }
-        
-        catch (error) {
-            alert(`Error: Failed to connect to endpoint \`${endpoint}\``);
-            return false
-        }
-
-        return true
     }
 
     /**
      * Executes when the 'next' button is clicked.
      */
     async _onNext() {
-        let appServer = (document.getElementById("app-server") as HTMLInputElement).value;
+        let appServer = (document.getElementById("app-server") as HTMLInputElement).value.trim();
+        let streamServer = (document.getElementById("stream-server") as HTMLInputElement).value.trim();
         
-        // validate app server URL value is entered
-        if (appServer.length === 0) {
-            alert("An App Server must be entered.")
-            return
+        // Validate inputs
+        if (!appServer) {
+            alert("An App Server must be entered.");
+            return;
         }
 
-        // validate app server URL formatting
+        if (!streamServer) {
+            alert("A Stream Server must be entered.");
+            return;
+        }
+
+        // Add protocol if missing
+        if (!appServer.startsWith('http')) {
+            appServer = `http://${appServer}`;
+        }
+        if (!streamServer.startsWith('http')) {
+            streamServer = `http://${streamServer}`;
+        }
+
+        // Validate URLs
         try {
             new URL(appServer);
-        }
-        catch (err) {
-            alert(`Invalid App Server URL format`);
-            return;
-        }
-        
-        // validate connection can be made to app server
-        if  (!await this._validateEndpoint(`${appServer}/cfg/apps`)) return
-        
-        let streamServer = (document.getElementById("stream-server") as HTMLInputElement).value;
-        if (streamServer.length === 0) {
-            alert("A Stream Server must be entered.")
-            return
-        }
-        
-        // validate stream server URL formatting
-        try {
             new URL(streamServer);
-        }
-        catch (err) {
-            alert(`Invalid Stream Server URL format`);
+        } catch (err) {
+            alert("Please enter valid URLs for both servers");
             return;
         }
 
-        // validate connection can be made to stream server
-        if  (!await this._validateEndpoint(`${streamServer}/streaming/stream`)) return
-
-        await this._loadApplications(appServer)
+        // Validate connections
+        const appEndpoint = `${appServer}/cfg/apps`;
+        const streamEndpoint = `${streamServer}/streaming/stream`;
         
-        // validate that applications exist
-        this.setState((prevState) => {
-            if (prevState.applications.length === 0) {
-                alert(`No applications were found from App Server \`${appServer}\``)
-            }
-            else {
-                this.props.onNext(appServer, streamServer, prevState.applications)
-            }
-        });
+        if (!await this._validateEndpoint(appEndpoint)) {
+            return;
+        }
 
+        if (!await this._validateEndpoint(streamEndpoint)) {
+            return;
+        }
+
+        try {
+            await this._loadApplications(appServer);
+            
+            this.setState((prevState) => {
+                if (!prevState.applications || prevState.applications.length === 0) {
+                    alert(`No applications were found from App Server ${appServer}`);
+                    return;
+                }
+                this.props.onNext(appServer, streamServer, prevState.applications);
+            });
+        } catch (error) {
+            console.error('Error loading applications:', error);
+            alert('Failed to load applications. Please check your connection and try again.');
+        }
     }
 
     private _loadApplications = async (appServer: string) => {
-        const response = await getApplications(appServer);
-        if (response.status === 200) {
-            console.log(response.data)
-            this.setState(prevState => ({ ...prevState, applications: Object.values(response.data) }));
+        try {
+            const response = await getApplications(appServer);
+            if (response.status === 200 && response.data) {
+                const applications = Object.values(response.data);
+                if (applications.length === 0) {
+                    throw new Error('No applications found');
+                }
+                this.setState(prevState => ({ ...prevState, applications }));
+            } else {
+                throw new Error('Invalid response from server');
+            }
+        } catch (error) {
+            console.error('Error loading applications:', error);
+            throw error;
         }
     };
 
     render() {
-        
         return (
-            <div style={formContainerStyle}>
-                <h3>Server Information</h3>
-                <div className="mb-3">
-                <div className="row align-items-center">
+            <div className="main-content">
+                <div style={formContainerStyle}>
+                    <h3 style={{ color: '#76b900', marginBottom: '20px' }}>Server Information</h3>
+                    <div className="mb-4">
+                        <div className="row align-items-center mb-4">
+                            <div className="col-12 col-md-3">
+                                <label htmlFor="app-server" className="form-label">App Server</label>
+                            </div>
+                            <div className="col-12 col-md-9">
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    id="app-server"
+                                    placeholder="Enter App Server"
+                                    defaultValue={this.state.appServer}
+                                    style={{
+                                        backgroundColor: '#2a2a2a',
+                                        border: '1px solid #333333',
+                                        color: '#ffffff',
+                                        padding: '10px',
+                                        borderRadius: '4px'
+                                    }}
+                                />
+                            </div>
+                        </div>
 
-                <div className="container">
-                <div className="row align-items-center mb-3">
-                    <div className="col-auto">
-                    <label htmlFor="input1" className="col-form-label">App Server</label>
+                        <div className="row align-items-center">
+                            <div className="col-12 col-md-3">
+                                <label htmlFor="stream-server" className="form-label">Stream Server</label>
+                            </div>
+                            <div className="col-12 col-md-9">
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    id="stream-server"
+                                    placeholder="Enter Stream Server"
+                                    defaultValue={this.state.streamServer}
+                                    style={{
+                                        backgroundColor: '#2a2a2a',
+                                        border: '1px solid #333333',
+                                        color: '#ffffff',
+                                        padding: '10px',
+                                        borderRadius: '4px'
+                                    }}
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <div className="col">
-                        <input type="text" className="form-control" id="app-server" placeholder="Enter App Server" defaultValue={this.state.appServer} style={{outline:"2px solid #76b900"}} />
+                    <div style={buttonContainerStyle}>
+                        <button type="button" className="nvidia-button" onClick={() => this._onBack()}>Previous</button>
+                        <button type="button" className="nvidia-button" onClick={() => this._onNext()}>Next</button>
                     </div>
                 </div>
-
-                <div className="row align-items-center">
-                    <div className="col-auto">
-                    <label htmlFor="input2" className="col-form-label">Stream Server</label>
-                    </div>
-                    <div className="col">
-                    <input type="text" className="form-control" id="stream-server" placeholder="Enter Stream Server" defaultValue={this.state.streamServer}  style={{outline:"2px solid #76b900"}} />
-                    </div>
-                </div>
-                </div>
-                
-                </div>
-                    <button type="button" className="nvidia-button" onClick={() => this._onBack()} style={nextButtonStyle}>Previous</button>
-                    <button type="button" className="nvidia-button" onClick={() => this._onNext()} style={nextButtonStyle}>Next</button>
-                </div>
-        </div>
-    )
+            </div>
+        )
     }
 }
 
@@ -293,7 +382,7 @@ export class ServerURLsForm extends Component <ServerURLsProps, ServerURLsState>
 *
 * @class ApplicationsForm
 */
-export class ApplicationsForm extends Component <ApplicationsProps, ApplicationsState> {
+export class ApplicationsForm extends Component<ApplicationsProps, ApplicationsState> {
     constructor(props: ApplicationsProps) {
         super(props);
 
@@ -350,26 +439,41 @@ export class ApplicationsForm extends Component <ApplicationsProps, Applications
 
     render() {
         return (
-            <div style={formContainerStyle}>
-                <h3>Select Application</h3>
-                <div className="mb-3">
-                    <select
-                        className="nvidia-dropdown"
-                        id="exampleSelect"
-                        value={this.state.selectedApplication.id} 
-                        onChange={this.handleSelectChange}
-                    >
-                            {this.props.applications.map((app) => (
-                        <option key={app.id} value={app.id} className="nvidia-dropdown-option">
-                            {app.id}
-                        </option>
+            <div className="main-content">
+                <div style={formContainerStyle}>
+                    <h3 style={{ color: '#76b900', marginBottom: '20px' }}>Select Application</h3>
+                    <div style={{ marginBottom: '20px' }}>
+                        {this.props.applications.map((app, index) => (
+                            <div key={index} className="form-check" style={{ marginBottom: '15px' }}>
+                                <input
+                                    className="form-check-input"
+                                    type="radio"
+                                    name="applicationRadio"
+                                    id={`app-${index}`}
+                                    checked={this.state.selectedApplication === app}
+                                    onChange={() => this.handleSelectChange({ target: { value: app.id } })}
+                                    style={{ marginRight: '10px' }}
+                                />
+                                <label className="form-check-label" htmlFor={`app-${index}`}>
+                                    {app.name}
+                                </label>
+                            </div>
                         ))}
-                        </select>
+                    </div>
+                    <div style={buttonContainerStyle}>
+                        <button type="button" className="nvidia-button" onClick={() => this.props.onBack()}>Previous</button>
+                        <button
+                            type="button"
+                            className="nvidia-button"
+                            onClick={() => this._onNext()}
+                            disabled={!this.state.selectedApplication}
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
-                    <button type="button" className="nvidia-button" onClick={() => this.props.onBack()} style={nextButtonStyle}>Previous</button>
-                    <button type="button" className="nvidia-button" onClick={() => this._onNext()} style={nextButtonStyle}>Next</button>
-                </div>
-            )
+            </div>
+        );
     }
 }
 
@@ -378,7 +482,7 @@ export class ApplicationsForm extends Component <ApplicationsProps, Applications
 *
 * @class VersionsForm
 */
-export class VersionsForm extends Component <VersionsProps, VersionsState> {
+export class VersionsForm extends Component<VersionsProps, VersionsState> {
     constructor(props: VersionsProps) {
         super(props);
 
@@ -432,27 +536,41 @@ export class VersionsForm extends Component <VersionsProps, VersionsState> {
 
     render() {
         return (
-            <div style={formContainerStyle}>
-                <h3>Select Version</h3>
-                <div className="mb-3">
-                    <select
-                        className="nvidia-dropdown"
-                        id="exampleSelect"
-                        value={this.state.selectedVersion} 
-                        onChange={this.handleSelectChange}
-                    >
-                            {this.props.versions.map((version) => (
-                        <option key={version} value={version} className="nvidia-dropdown-option">
-                            {version}
-                        </option>
+            <div className="main-content">
+                <div style={formContainerStyle}>
+                    <h3 style={{ color: '#76b900', marginBottom: '20px' }}>Select Version</h3>
+                    <div style={{ marginBottom: '20px' }}>
+                        {this.props.versions.map((version, index) => (
+                            <div key={index} className="form-check" style={{ marginBottom: '15px' }}>
+                                <input
+                                    className="form-check-input"
+                                    type="radio"
+                                    name="versionRadio"
+                                    id={`version-${index}`}
+                                    checked={this.state.selectedVersion === version}
+                                    onChange={() => this.handleSelectChange({ target: { value: version } })}
+                                    style={{ marginRight: '10px' }}
+                                />
+                                <label className="form-check-label" htmlFor={`version-${index}`}>
+                                    {version}
+                                </label>
+                            </div>
                         ))}
-                        </select>
-                </div>      
-                    <button type="button" className="nvidia-button" onClick={() => this.props.onBack() } style={nextButtonStyle}>Previous</button>
-                    <button type="button" className="nvidia-button" onClick={() => this._onNext()} style={nextButtonStyle}>Next</button>
+                    </div>
+                    <div style={buttonContainerStyle}>
+                        <button type="button" className="nvidia-button" onClick={() => this.props.onBack()}>Previous</button>
+                        <button
+                            type="button"
+                            className="nvidia-button"
+                            onClick={() => this._onNext()}
+                            disabled={!this.state.selectedVersion}
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
-      
-            )
+            </div>
+        );
     }
 }
 
@@ -461,7 +579,7 @@ export class VersionsForm extends Component <VersionsProps, VersionsState> {
 *
 * @class ProfilesForm
 */
-export class ProfilesForm extends Component <ProfilesProps, ProfilesState> {
+export class ProfilesForm extends Component<ProfilesProps, ProfilesState> {
     constructor(props: ProfilesProps) {
         super(props);
 
@@ -488,26 +606,40 @@ export class ProfilesForm extends Component <ProfilesProps, ProfilesState> {
 
     render() {
         return (
-            <div style={formContainerStyle}>
-                <h3>Select Profile</h3>
-                <div className="mb-3">
-                    <select
-                        className="nvidia-dropdown"
-                        id="profileSelect"
-                        value={this.state.selectedProfile} 
-                        onChange={this.handleSelectChange}
-                    >
-                            {this.props.profiles.map((profile) => (
-                        <option key={profile} value={profile} className="nvidia-dropdown-option">
-                            {profile}
-                        </option>
+            <div className="main-content">
+                <div style={formContainerStyle}>
+                    <h3 style={{ color: '#76b900', marginBottom: '20px' }}>Select Profile</h3>
+                    <div style={{ marginBottom: '20px' }}>
+                        {this.props.profiles.map((profile, index) => (
+                            <div key={index} className="form-check" style={{ marginBottom: '15px' }}>
+                                <input
+                                    className="form-check-input"
+                                    type="radio"
+                                    name="profileRadio"
+                                    id={`profile-${index}`}
+                                    checked={this.state.selectedProfile === profile}
+                                    onChange={() => this.handleSelectChange({ target: { value: profile } })}
+                                    style={{ marginRight: '10px' }}
+                                />
+                                <label className="form-check-label" htmlFor={`profile-${index}`}>
+                                    {profile}
+                                </label>
+                            </div>
                         ))}
-                        </select>
+                    </div>
+                    <div style={buttonContainerStyle}>
+                        <button type="button" className="nvidia-button" onClick={() => this.props.onBack()}>Previous</button>
+                        <button
+                            type="button"
+                            className="nvidia-button"
+                            onClick={() => this._onNext()}
+                            disabled={!this.state.selectedProfile}
+                        >
+                            Start
+                        </button>
+                    </div>
                 </div>
-                    <button type="button" className="nvidia-button" onClick={() => this.props.onBack()} style={nextButtonStyle}>Previous</button>
-                    <button type="button" className="nvidia-button" onClick={() => this._onNext()} style={nextButtonStyle}>Next</button>
-                </div>
-      
-            )
+            </div>
+        );
     }
 }
